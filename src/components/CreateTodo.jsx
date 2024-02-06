@@ -1,9 +1,19 @@
 import React from "react";
 import "./CreateTodo.css";
 import { useState } from "react";
+import { useEffect } from "react";
+//get items from LS
+const getLocalItems = () => {
+  let list = localStorage.getItem("lists");
+  if (list) {
+    return JSON.parse(localStorage.getItem("lists"));
+  } else {
+    return [];
+  }
+};
 const CreateTodo = () => {
   const [createTask, setCreateTask] = useState("");
-  const [todoList, setTodoList] = useState([]);
+  const [todoList, setTodoList] = useState(getLocalItems());
 
   const handleInput = (e) => {
     setCreateTask(e.target.value);
@@ -31,9 +41,14 @@ const CreateTodo = () => {
     setTodoList(updatedList);
     console.log(updatedList);
   };
+
+  //add data to local storage
+  useEffect(() => {
+    localStorage.setItem("lists", JSON.stringify(todoList));
+  }, [todoList]);
+
   return (
     <>
-      <h1 className="text-4xl font-bold text-center">TODO LIST</h1>
       <div className="create-todo flex justify-center items-center py-4">
         <input
           value={createTask}
@@ -52,7 +67,7 @@ const CreateTodo = () => {
         </button>
       </div>
 
-      <div className="todo-list w-1/2 ml-24  ">
+      <div className="todo-list w-1/2 ml-[340px]  ">
         {todoList.map((todo, id) => (
           <ul
             key={id}
