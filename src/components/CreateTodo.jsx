@@ -1,8 +1,7 @@
 import React from "react";
-import "./CreateTodo.css";
-import { useState } from "react";
 import { useEffect } from "react";
-//get items from LS
+import { useState } from "react";
+
 const getLocalItems = () => {
   let list = localStorage.getItem("lists");
   if (list) {
@@ -12,91 +11,105 @@ const getLocalItems = () => {
   }
 };
 const CreateTodo = () => {
-  const [createTask, setCreateTask] = useState("");
-  const [todoList, setTodoList] = useState(getLocalItems());
-
-  const handleInput = (e) => {
-    setCreateTask(e.target.value);
+  const [createTodo, setcreateTodo] = useState("");
+  const [tasks, setTasks] = useState(getLocalItems());
+  const [toggleSubmit, setToggleSubmit] = useState(true);
+  const [isEditItem, setisEditItem] = useState(null);
+  const handleCreateTodo = () => {
+    if (!createTodo) {
+      alert("Task is empty");
+    } else if (createTodo && !toggleSubmit) {
+      setTasks(
+        tasks.map((todo) => {
+          if (todo.id === isEditItem) {
+            return { ...todo, task: createTodo };
+          }
+          return todo;
+        })
+      );
+      setToggleSubmit(true);
+      setcreateTodo("");
+      setisEditItem(null);
+    } else {
+      setTasks([...tasks, { id: Date.now(), task: createTodo }]);
+      console.log(tasks);
+      setcreateTodo("");
+    }
   };
-  const handleCreateTask = () => {
-    setTodoList([
-      ...todoList,
-      { id: Date.now(), task: createTask, completed: false },
-    ]);
-    setCreateTask("");
-  };
-  const handleDelete = (id) => {
-    const newList = todoList;
-    newList.splice(id, 1);
-    setTodoList([...newList]);
-  };
-
-  const handleChecked = (id) => {
-    const updatedList = todoList.map((todo) => {
-      if (todo.id === id) {
-        return { ...todo, completed: !todo.completed };
-      }
-      return todo;
+  const removeHandler = (index) => {
+    const updatedList = tasks.filter((todo) => {
+      return index !== todo.id;
     });
-    setTodoList(updatedList);
-    console.log(updatedList);
+    setTasks(updatedList);
   };
 
-  //add data to local storage
+  const handleEdit = (id) => {
+    let newEditItem = tasks.find((todo) => {
+      return todo.id === id;
+    });
+    console.log(newEditItem);
+    setToggleSubmit(false);
+    setcreateTodo(newEditItem.task);
+    setisEditItem(id);
+  };
+
   useEffect(() => {
-    localStorage.setItem("lists", JSON.stringify(todoList));
-  }, [todoList]);
-
+    localStorage.setItem("lists", JSON.stringify(tasks));
+  }, [tasks]);
   return (
-    <>
-      <div className="create-todo flex justify-center items-center py-4">
+    <div className="container mt-4  w-full h-screen">
+      <div className="create-todo-container flex justify-center items-center">
         <input
-          value={createTask}
-          onChange={handleInput}
-          type="text"
-          name=""
-          id=""
+          type="email"
+          value={createTodo}
+          onChange={(e) => setcreateTodo(e.target.value)}
+          id="email"
+          className=" border-gray-300 border-solid border-[1px] w-[250px] text-md rounded-m outline-none p-4 focus:ring-blue-500"
           placeholder="Create Todo"
-          className="create-todo-input w-1/2 border-solid border-2 border-gray-600 rounded-md py-3 px-4 text-xl"
+          required
         />
-        <button
-          className="create-todo-button py-4 px-8 bg-green-500 rounded-md text-white ml-4"
-          onClick={handleCreateTask}
-        >
-          Create Task
-        </button>
-      </div>
-
-      <div className="todo-list w-1/2 ml-[340px]  ">
-        {todoList.map((todo, id) => (
-          <ul
-            key={id}
-            className="todo-item bg-zinc-200 justify-between rounded-md mb-2  flex items-center"
+        {toggleSubmit ? (
+          <button
+            className="bg-blue-500 rounded-md text-white p-4 text-base font-light text-indigo-darkest ml-3"
+            onClick={handleCreateTodo}
           >
-            <li
-              className={`todo-item py-4 text-2xl flex-1 ml-2 ${
-                todo.completed === true ? "checked" : ""
-              }`}
-            >
-              <input
-                type="checkbox"
-                name=""
-                id=""
-                className="ml-2 flex-2 mt-1"
-                onChange={() => handleChecked(todo.id)}
-              />
-              <span className="ml-2">{todo.task} </span>
-            </li>
-            <button
-              className="remove-todo-button py-2 px-4 bg-red-600 rounded-md text-white mr-2"
-              onClick={() => handleDelete(id)}
-            >
-              Remove
-            </button>
-          </ul>
+            Create Todo
+          </button>
+        ) : (
+          <button
+            className="bg-green-500 rounded-md text-white p-4 px-7 ml-3 text-base font-light text-indigo-darkest  "
+            onClick={handleCreateTodo}
+          >
+            Update Item
+          </button>
+        )}
+      </div>
+      {/* End of Create Task */}
+      <div className="tasks-container">
+        {tasks.map((todo) => (
+          <div className="mt-4 flex" key={todo.id}>
+            <ul>
+              <li className="bg-zinc-200 p-2 w-[380px] ml-[130px] flex justify-between items-center flex-1 rounded-md">
+                <span className="text-2xl w-[220px]">{todo.task}</span>
+                <button
+                  className="bg-green-500 rounded-md text-white p-3 text-base font-light text-indigo-darkest  "
+                  onClick={() => handleEdit(todo.id)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="bg-red-500 rounded-md text-white p-3 text-base font-light text-indigo-darkest "
+                  onClick={() => removeHandler(todo.id)}
+                >
+                  Remove
+                </button>
+              </li>
+            </ul>
+          </div>
         ))}
       </div>
-    </>
+    </div>
   );
 };
+
 export default CreateTodo;
